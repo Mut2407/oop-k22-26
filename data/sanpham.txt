@@ -1,0 +1,5 @@
+SAN_PHAM
+GIAY|SP03|Giay chay bo|Nike|1200000.0|8|GIAY|42.0|Den||Cao su
+GIAY|SP04|Giay bong da|Adidas|950000.0|12|GIAY|41.0|Trang||Dinh cao su
+DUNG_CU|SP01|Vot cau long|Yonex|350000.0|10|DC|cau long|Carbon|0.085
+DUNG_CU|SP02|Bong da|Dong Luc|250000.0|20|DC|Bong da|Da tong hop|0.45
