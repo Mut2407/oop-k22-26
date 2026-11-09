@@ -1,5 +1,7 @@
 package services;
 
-public class DanhSachLoaiSP {
+import models.Kho;
+
+public class DanhSachLoaiSP implements IQuanLyDanhSach<Kho> {
     
 }

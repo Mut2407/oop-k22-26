@@ -1,5 +1,7 @@
 package services;
 
-public class DanhSachNhaCungCap {
+import models.NhaCungCap;
+
+public class DanhSachNhaCungCap implements IQuanLyDanhSach<NhaCungCap>{
     
 }

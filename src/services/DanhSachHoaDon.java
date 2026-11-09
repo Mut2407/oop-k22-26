@@ -1,5 +1,7 @@
 package services;
 
-public class DanhSachHoaDon {
+import models.HoaDon;
+
+public class DanhSachHoaDon implements IQuanLyDanhSach<HoaDon> {
     
 }
