@@ -14,7 +14,7 @@ public class LuuTruFileText {
     private String thuMuc;
     private String tenFile;
     private int soDong;
-    public static final String TEN_FILE = "cuahang.txt"; // Dinh dang cu, chi dung de doc lai.
+    //public static final String TEN_FILE = "cuahang.txt"; // Dinh dang cu, chi dung de doc lai.
     private static final String[] CAC_FILE = {"loaisp.txt", "khachhang.txt", "nhanvien.txt",
             "nhacungcap.txt", "sanpham.txt", "hoadon.txt", "chitiethoadon.txt",
             "phieunhap.txt", "chitietphieunhap.txt"};
@@ -55,7 +55,7 @@ public class LuuTruFileText {
     }
 
     private void docFileCu(QuanLyCuaHang tam) throws IOException {
-        File tep = new File(thuMuc, TEN_FILE);
+        File tep = new File(thuMuc);
         File banSao = new File(thuMuc, "cuahang.bak");
         if (!tep.exists() && banSao.exists() && !banSao.renameTo(tep))
             throw new IOException("Khong phuc hoi duoc cuahang.bak.");
