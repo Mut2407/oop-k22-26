@@ -254,11 +254,17 @@ public class QuanLyCuaHang {
 
     private void hienThiMenu() {
         System.out.println("\n===== QUAN LY CUA HANG DUNG CU THE THAO =====");
-        System.out.println("1. San pham     2. Loai san pham");
-        System.out.println("3. Khach hang   4. Nhan vien   5. Nha cung cap");
-        System.out.println("6. Hoa don      7. Phieu nhap");
-        System.out.println("8. Tra cuu ton  9. Thong ke tong tien");
-        System.out.println("10. Luu file    0. Luu va thoat");
+        System.out.println("1. Quan ly San pham");     
+        System.out.println("2. Quan ly Loai san pham");
+        System.out.println("3. Quan ly Khach hang");   
+        System.out.println("4. Quan ly Nhan vien");   
+        System.out.println("5. Quan ly Nha cung cap");
+        System.out.println("6. Quan ly Hoa don");      
+        System.out.println("7. Quan ly Phieu nhap");
+        System.out.println("8. Tra cuu ton kho");  
+        System.out.println("9. Thong ke tong tien");
+        System.out.println("10. Luu file");    
+        System.out.println("0. Luu va thoat");
     }
 
     private boolean xuLyMenu(int chon) {
@@ -298,8 +304,13 @@ public class QuanLyCuaHang {
 
     private int chonTacVu(String ten) {
         System.out.println("\n--- " + ten + " ---");
-        System.out.println("1. Xem   2. Them   3. Sua   4. Xoa   5. Tim");
-        System.out.println("6. Them nhieu (nhap n/k phan tu)   0. Quay lai");
+        System.out.println("1. Xem danh sach");   
+        System.out.println("2. Them");   
+        System.out.println("3. Sua");   
+        System.out.println("4. Xoa");   
+        System.out.println("5. Tim kiem");
+        System.out.println("6. Them nhieu (nhap n/k phan tu)");   
+        System.out.println("0. Quay lai");
         return nhapSoNguyen("Chon: ", 0, 6);
     }
 

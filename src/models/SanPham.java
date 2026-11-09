@@ -10,6 +10,7 @@ public abstract class SanPham {
     private int soLuongTon;
     private LoaiSP loaiSP;
 
+    //không tham số
     public SanPham() {
         maSanPham = "";
         tenSanPham = "";
@@ -17,8 +18,8 @@ public abstract class SanPham {
         giaBan = BigDecimal.ZERO;
     }
 
-    public SanPham(String maSanPham, String tenSanPham, String thuongHieu,
-            BigDecimal giaBan, LoaiSP loaiSP) {
+    //có tham số
+    public SanPham(String maSanPham, String tenSanPham, String thuongHieu, BigDecimal giaBan, LoaiSP loaiSP) {
         kiemTraChuoi(maSanPham);
         this.maSanPham = maSanPham.trim();
         setTenSanPham(tenSanPham);
@@ -81,8 +82,7 @@ public abstract class SanPham {
     }
 
     public boolean kiemTraHopLe() {
-        return !maSanPham.isEmpty() && !tenSanPham.isEmpty()
-                && !thuongHieu.isEmpty() && loaiSP != null && loaiSP.kiemTraHopLe();
+        return !maSanPham.isEmpty() && !tenSanPham.isEmpty() && !thuongHieu.isEmpty() && loaiSP != null && loaiSP.kiemTraHopLe();
     }
 
     public void capNhatTu(SanPham moi) {
