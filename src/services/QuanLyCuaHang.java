@@ -828,8 +828,13 @@ public class QuanLyCuaHang {
 
     private int chonTacVuChungTu(String ten) {
         System.out.println("\n--- " + ten + " ---");
-        System.out.println("1. Xem   2. Them   3. Sua   4. Xoa   5. Tim");
-        System.out.println("6. Xem chi tiet   0. Quay lai");
+        System.out.println("1. Xem danh sach");   
+        System.out.println("2. Them");   
+        System.out.println("3. Sua");   
+        System.out.println("4. Xoa");   
+        System.out.println("5. Tim kiem");
+        System.out.println("6. Xem chi tiet");   
+        System.out.println("0. Quay lai");
         return nhapSoNguyen("Chon: ", 0, 6);
     }
 
@@ -845,7 +850,7 @@ public class QuanLyCuaHang {
     }
 
     private void menuThongKe() {
-        int chon = nhapSoNguyen("1. Tat ca   2. Theo khoang ngay: ", 1, 2);
+        int chon = nhapSoNguyen("1. Tat ca\n2. Theo khoang ngay: ", 1, 2);
         if (chon == 1) {
             inTongTien(danhSachHoaDon.thongKeTongTien(), danhSachPhieuNhap.thongKeTongTien());
             return;
@@ -860,5 +865,4 @@ public class QuanLyCuaHang {
         System.out.println("Tong tien ban: " + tienBan.toPlainString());
         System.out.println("Tong tien nhap: " + tienNhap.toPlainString());
     }
-
 }
