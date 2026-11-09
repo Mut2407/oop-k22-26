@@ -608,30 +608,22 @@ public class QuanLyCuaHang {
     }
 
     private SanPham nhapSanPham(String ma, SanPham cu) {
-        int loai = cu == null ? nhapSoNguyen("1. Giay  2. Quan ao  3. Dung cu: ", 1, 3) : loaiLop(cu);
+        int loai = cu == null ? nhapSoNguyen("1. Giay  2. Dung cu: ", 1, 2) : loaiLop(cu);
         if (loai == 1)
             return nhapGiay(ma);
-        if (loai == 2)
-            return nhapQuanAo(ma);
         return nhapDungCu(ma);
     }
 
     private int loaiLop(SanPham sp) {
         if (sp instanceof GiayTheThao)
             return 1;
-        return sp instanceof QuanAoTheThao ? 2 : 3;
+        return 2;
     }
 
     private GiayTheThao nhapGiay(String ma) {
         return new GiayTheThao(ma, nhapChuoi("Ten SP: "), nhapChuoi("Thuong hieu: "),
                 nhapTien("Gia ban: "), chonLoaiSP(), nhapSoThuc("Co giay: "),
                 nhapChuoi("Mau: "), nhapChuoi("Chat lieu: "), nhapChuoi("Loai de: "));
-    }
-
-    private QuanAoTheThao nhapQuanAo(String ma) {
-        return new QuanAoTheThao(ma, nhapChuoi("Ten SP: "), nhapChuoi("Thuong hieu: "),
-                nhapTien("Gia ban: "), chonLoaiSP(), nhapChuoi("Co quan ao (S/M/L/...): "),
-                nhapChuoi("Mau: "), nhapChuoi("Chat lieu: "));
     }
 
     private DungCuTheThao nhapDungCu(String ma) {
