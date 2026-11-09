@@ -5,12 +5,22 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.DateTimeException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 
-// File text UTF-8; doc theo thu tu de noi lai cac tham chieu bang ma.
+// Doc cac file text theo thu tu de noi lai tham chieu bang ma.
 public class LuuTruFileText {
     private String thuMuc;
+    private String tenFile;
     private int soDong;
-    public static final String TEN_FILE = "cuahang.txt";
+    public static final String TEN_FILE = "cuahang.txt"; // Dinh dang cu, chi dung de doc lai.
+    private static final String[] CAC_FILE = {"loaisp.txt", "khachhang.txt", "nhanvien.txt",
+            "nhacungcap.txt", "sanpham.txt", "hoadon.txt", "chitiethoadon.txt",
+            "phieunhap.txt", "chitietphieunhap.txt"};
+    private static final String[] CAC_NHAN = {"LOAI_SP", "KHACH_HANG", "NHAN_VIEN",
+            "NHA_CUNG_CAP", "SAN_PHAM", "HOA_DON", "CHI_TIET_HOA_DON",
+            "PHIEU_NHAP", "CHI_TIET_PHIEU_NHAP"};
 
     public LuuTruFileText() {
         this("data");
@@ -23,29 +33,180 @@ public class LuuTruFileText {
     }
 
     public void docDuLieu(QuanLyCuaHang quanLy) throws IOException {
-        File tep = new File(thuMuc, TEN_FILE);
-        phucHoiNeuCan(tep);
         QuanLyCuaHang tam = new QuanLyCuaHang(thuMuc);
-        if (tep.exists())
-            docTuFile(tep, tam);
-        else
-            docKhachHangCu(tam);
+        try {
+            if (coFileRieng()) docCacFile(tam);
+            else docFileCu(tam);
+        } catch (IllegalArgumentException | DateTimeException e) {
+            throw new IOException(viTri() + e.getMessage(), e);
+        }
         quanLy.thayDuLieu(tam);
     }
 
-    private void phucHoiNeuCan(File tep) throws IOException {
+    private String viTri() {
+        return tenFile + ": dong " + soDong + ": ";
+    }
+
+    private boolean coFileRieng() {
+        for (String ten : CAC_FILE)
+            if (new File(thuMuc, ten).exists())
+                return true;
+        return false;
+    }
+
+    private void docFileCu(QuanLyCuaHang tam) throws IOException {
+        File tep = new File(thuMuc, TEN_FILE);
         File banSao = new File(thuMuc, "cuahang.bak");
         if (!tep.exists() && banSao.exists() && !banSao.renameTo(tep))
             throw new IOException("Khong phuc hoi duoc cuahang.bak.");
+        if (tep.exists())
+            docTuFile(tep, tam);
+    }
+
+    private void docCacFile(QuanLyCuaHang tam) throws IOException {
+        for (int i = 0; i < 5; i++)
+            docDanhSach(i, tam);
+        docHoaDonRieng(tam);
+        docPhieuNhapRieng(tam);
+    }
+
+    private BufferedReader moDoc(File tep) throws IOException {
+        return new BufferedReader(new InputStreamReader(new FileInputStream(tep), "UTF-8"));
+    }
+
+    private String[] docCacDong(int loai) throws IOException {
+        File tep = new File(thuMuc, CAC_FILE[loai]);
+        if (!tep.exists())
+            return new String[0];
+        tenFile = tep.getName();
+        soDong = 1;
+        try (BufferedReader in = moDoc(tep)) {
+            String dau = in.readLine();
+            yeuCau(dau != null && dau.replace("\uFEFF", "").equals(CAC_NHAN[loai]), "Sai dau file.");
+            return docPhanConLai(in);
+        }
+    }
+
+    private String[] docPhanConLai(BufferedReader in) throws IOException {
+        String[] dong = new String[10];
+        int n = 0;
+        String s;
+        while ((s = in.readLine()) != null) {
+            if (n == dong.length)
+                dong = Arrays.copyOf(dong, n + 10);
+            dong[n++] = s;
+        }
+        return Arrays.copyOf(dong, n);
+    }
+
+    private String[] tachDong(String dong, int loai, int viTri, int soTruong) throws IOException {
+        tenFile = CAC_FILE[loai];
+        soDong = viTri + 2;
+        String[] f = dong.split("\\|", -1);
+        for (int i = 0; i < f.length; i++)
+            f[i] = f[i].trim();
+        yeuCau(soTruong == 0 || f.length == soTruong, "Sai so truong.");
+        return f;
+    }
+
+    private void docDanhSach(int loai, QuanLyCuaHang q) throws IOException {
+        String[] dong = docCacDong(loai);
+        for (int i = 0; i < dong.length; i++) {
+            if (dong[i].trim().isEmpty())
+                continue;
+            String[] f = tachDong(dong[i], loai, i, loai == 0 ? 3 : (loai == 4 ? 0 : 4));
+            yeuCau(themDongDanhSach(loai, f, q), "Trung ma hoac du lieu khong hop le.");
+        }
+    }
+
+    private boolean themDongDanhSach(int loai, String[] f, QuanLyCuaHang q) throws IOException {
+        if (loai == 0) return q.getDanhSachLoaiSP().them(new LoaiSP(f[0], f[1], f[2]));
+        if (loai == 1) return q.getDanhSachKhachHang().them(new KhachHang(f[0], f[1], f[2], f[3]));
+        if (loai == 2) return q.getDanhSachNhanVien().them(new NhanVien(f[0], f[1], f[2], f[3]));
+        if (loai == 3) return q.getDanhSachNhaCungCap().them(new NhaCungCap(f[0], f[1], f[2], f[3]));
+        SanPham sp = taoSanPham(f, q);
+        sp.capNhatTon(Integer.parseInt(f[5]));
+        return q.getDanhSachSanPham().them(sp);
+    }
+
+    private void docHoaDonRieng(QuanLyCuaHang q) throws IOException {
+        String[] dong = docCacDong(5);
+        String[] chiTiet = docCacDong(6);
+        boolean[] daDung = new boolean[chiTiet.length];
+        for (int i = 0; i < dong.length; i++)
+            if (!dong[i].trim().isEmpty())
+                docMotHoaDon(dong[i], i, chiTiet, daDung, q);
+        kiemTraChiTiet(chiTiet, daDung, 6);
+    }
+
+    private void docMotHoaDon(String dong, int i, String[] ct, boolean[] daDung, QuanLyCuaHang q) throws IOException {
+        String[] f = tachDong(dong, 5, i, 4);
+        HoaDon phieu = new HoaDon(f[0], LocalDate.parse(f[1]),
+                q.getDanhSachKhachHang().timTheoMa(f[2]), q.getDanhSachNhanVien().timTheoMa(f[3]));
+        docChiTietHoaDon(phieu, ct, daDung, q);
+        tachDong(dong, 5, i, 4);
+        yeuCau(q.getDanhSachHoaDon().them(phieu), "Hoa don rong chi tiet hoac trung ma.");
+    }
+
+    private void docChiTietHoaDon(HoaDon phieu, String[] dong, boolean[] daDung, QuanLyCuaHang q) throws IOException {
+        for (int i = 0; i < dong.length; i++) {
+            if (dong[i].trim().isEmpty()) continue;
+            String[] f = tachDong(dong[i], 6, i, 4);
+            if (!f[0].equalsIgnoreCase(phieu.getMaHoaDon())) continue;
+            ChiTietHoaDon ct = new ChiTietHoaDon(q.getDanhSachSanPham().timTheoMa(f[1]),
+                    Integer.parseInt(f[2]), new BigDecimal(f[3]));
+            yeuCau(phieu.themChiTiet(ct), "Chi tiet trung san pham hoac khong hop le.");
+            daDung[i] = true;
+        }
+    }
+
+    private void docPhieuNhapRieng(QuanLyCuaHang q) throws IOException {
+        String[] dong = docCacDong(7);
+        String[] chiTiet = docCacDong(8);
+        boolean[] daDung = new boolean[chiTiet.length];
+        for (int i = 0; i < dong.length; i++)
+            if (!dong[i].trim().isEmpty())
+                docMotPhieuNhap(dong[i], i, chiTiet, daDung, q);
+        kiemTraChiTiet(chiTiet, daDung, 8);
+    }
+
+    private void docMotPhieuNhap(String dong, int i, String[] ct, boolean[] daDung, QuanLyCuaHang q) throws IOException {
+        String[] f = tachDong(dong, 7, i, 4);
+        PhieuNhap phieu = new PhieuNhap(f[0], LocalDate.parse(f[1]),
+                q.getDanhSachNhaCungCap().timTheoMa(f[2]), q.getDanhSachNhanVien().timTheoMa(f[3]));
+        docChiTietPhieuNhap(phieu, ct, daDung, q);
+        tachDong(dong, 7, i, 4);
+        yeuCau(q.getDanhSachPhieuNhap().them(phieu), "Phieu nhap rong chi tiet hoac trung ma.");
+    }
+
+    private void docChiTietPhieuNhap(PhieuNhap phieu, String[] dong, boolean[] daDung, QuanLyCuaHang q) throws IOException {
+        for (int i = 0; i < dong.length; i++) {
+            if (dong[i].trim().isEmpty()) continue;
+            String[] f = tachDong(dong[i], 8, i, 4);
+            if (!f[0].equalsIgnoreCase(phieu.getMaPhieuNhap())) continue;
+            ChiTietPhieuNhap ct = new ChiTietPhieuNhap(q.getDanhSachSanPham().timTheoMa(f[1]),
+                    Integer.parseInt(f[2]), new BigDecimal(f[3]));
+            yeuCau(phieu.themChiTiet(ct), "Chi tiet trung san pham hoac khong hop le.");
+            daDung[i] = true;
+        }
+    }
+
+    private void kiemTraChiTiet(String[] dong, boolean[] daDung, int loai) throws IOException {
+        for (int i = 0; i < dong.length; i++)
+            if (!dong[i].trim().isEmpty() && !daDung[i]) {
+                tachDong(dong[i], loai, i, 4);
+                yeuCau(false, "Chi tiet tham chieu ma chung tu khong ton tai.");
+            }
     }
 
     private void docTuFile(File tep, QuanLyCuaHang tam) throws IOException {
+        tenFile = tep.getName();
         soDong = 0;
         BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tep), "UTF-8"));
         try {
             docNoiDung(in, tam);
         } catch (IllegalArgumentException | DateTimeException e) {
-            throw new IOException(tep.getName() + ": dong " + soDong + ": " + e.getMessage(), e);
+            throw new IOException(viTri() + e.getMessage(), e);
         } finally {
             in.close();
         }
@@ -92,7 +253,7 @@ public class LuuTruFileText {
 
     private void yeuCau(boolean dung, String thongBao) throws IOException {
         if (!dung)
-            throw new IOException("Dong " + soDong + ": " + thongBao);
+            throw new IOException(viTri() + thongBao);
     }
 
     private void docLoaiSP(BufferedReader in, QuanLyCuaHang tam) throws IOException {
@@ -146,9 +307,9 @@ public class LuuTruFileText {
         LoaiSP loai = tam.getDanhSachLoaiSP().timTheoMa(f[6]);
         if (f[0].equals("GIAY"))
             return docGiay(f, loai);
-        if (f[0].equals("QUANAO"))
+        if ((f[0].equals("QUANAO") || f[0].equals("QUAN_AO")))
             return docQuanAo(f, loai);
-        yeuCau(f[0].equals("DUNGCU"), "Sai nhan lop san pham.");
+        yeuCau((f[0].equals("DUNGCU") || f[0].equals("DUNG_CU")), "Sai nhan lop san pham.");
         return docDungCu(f, loai);
     }
 
@@ -215,69 +376,79 @@ public class LuuTruFileText {
         return n;
     }
 
-    private void docKhachHangCu(QuanLyCuaHang tam) throws IOException {
-        File tep = new File(thuMuc, "khachhang.txt");
-        if (!tep.exists())
-            return;
-        BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tep), "UTF-8"));
-        try {
-            napKhachHangCu(in, tam);
-        } finally {
-            in.close();
-        }
-    }
-
-    private void napKhachHangCu(BufferedReader in, QuanLyCuaHang tam) throws IOException {
-        soDong = 0;
-        yeuCau(docDong(in, 1)[0].equals("KHACH_HANG"), "Sai dau khachhang.txt.");
-        String dong = in.readLine();
-        while (dong != null) {
-            soDong++;
-            if (!dong.trim().isEmpty())
-                napMotKhachHangCu(dong, tam);
-            dong = in.readLine();
-        }
-    }
-
-    private void napMotKhachHangCu(String dong, QuanLyCuaHang tam) throws IOException {
-        String[] f = dong.split("\\|", -1);
-        yeuCau(f.length == 4, "Sai so truong khachhang.txt.");
-        try {
-            yeuCau(tam.getDanhSachKhachHang().them(new KhachHang(f[0], f[1], f[2], f[3])), "Ma KH trung.");
-        } catch (IllegalArgumentException e) {
-            throw new IOException("khachhang.txt dong " + soDong + ": " + e.getMessage(), e);
-        }
-    }
-
     public void ghiDuLieu(QuanLyCuaHang quanLy) throws IOException {
-        File thuMucFile = new File(thuMuc);
-        if (!thuMucFile.isDirectory() && !thuMucFile.mkdirs())
-            throw new IOException("Khong tao duoc thu muc du lieu.");
-        File tam = new File(thuMuc, "cuahang.tmp");
-        ghiRaFile(tam, quanLy);
-        docTuFile(tam, new QuanLyCuaHang(thuMuc));
-        thayFile(tam);
+        File tam = new File(thuMuc, ".luu-tam");
+        if (!tam.isDirectory() && !tam.mkdirs())
+            throw new IOException("Khong tao duoc thu muc tam.");
+        ghiCacFile(tam, quanLy);
+        new LuuTruFileText(tam.getPath()).docDuLieu(new QuanLyCuaHang(tam.getPath()));
+        boolean[] coFileCu = saoLuuCacFile(tam);
+        thayCacFile(tam, coFileCu);
     }
 
-    private void ghiRaFile(File tep, QuanLyCuaHang quanLy) throws IOException {
-        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(tep), "UTF-8"));
-        try {
-            ghiNoiDung(out, quanLy);
-        } finally {
-            out.close();
+    private void ghiCacFile(File thuMucTam, QuanLyCuaHang q) throws IOException {
+        for (int i = 0; i < CAC_FILE.length; i++) {
+            File tep = new File(thuMucTam, CAC_FILE[i]);
+            try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(tep), "UTF-8"))) {
+                ghiDong(out, new String[] {CAC_NHAN[i]});
+                if (i < 5) ghiDanhSach(out, i, q);
+                else ghiChungTu(out, i, q);
+            }
         }
     }
 
-    private void ghiNoiDung(BufferedWriter out, QuanLyCuaHang q) throws IOException {
-        ghiDong(out, new String[] {"SPORT_STORE", "1"});
-        ghiLoaiSP(out, q);
-        ghiKhachHang(out, q);
-        ghiNhanVien(out, q);
-        ghiNhaCungCap(out, q);
-        ghiSanPham(out, q);
-        ghiHoaDon(out, q);
-        ghiPhieuNhap(out, q);
-        ghiDong(out, new String[] {"KET_THUC"});
+    private void ghiDanhSach(BufferedWriter out, int loai, QuanLyCuaHang q) throws IOException {
+        if (loai == 0) ghiLoaiSP(out, q);
+        else if (loai == 1) ghiKhachHang(out, q);
+        else if (loai == 2) ghiNhanVien(out, q);
+        else if (loai == 3) ghiNhaCungCap(out, q);
+        else ghiSanPham(out, q);
+    }
+
+    private void ghiChungTu(BufferedWriter out, int loai, QuanLyCuaHang q) throws IOException {
+        if (loai == 5) ghiHoaDon(out, q);
+        else if (loai == 6) ghiChiTietHoaDon(out, q);
+        else if (loai == 7) ghiPhieuNhap(out, q);
+        else ghiChiTietPhieuNhap(out, q);
+    }
+
+    private boolean[] saoLuuCacFile(File tam) throws IOException {
+        boolean[] coFileCu = new boolean[CAC_FILE.length];
+        for (int i = 0; i < CAC_FILE.length; i++) {
+            File cu = new File(thuMuc, CAC_FILE[i]);
+            coFileCu[i] = cu.exists();
+            if (cu.exists() && !cu.isFile())
+                throw new IOException("Khong phai file: " + cu.getPath());
+            if (coFileCu[i])
+                Files.copy(cu.toPath(), new File(tam, CAC_FILE[i] + ".bak").toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
+        return coFileCu;
+    }
+
+    private void thayCacFile(File tam, boolean[] coFileCu) throws IOException {
+        int daThay = 0;
+        try {
+            for (String ten : CAC_FILE) {
+                Files.move(new File(tam, ten).toPath(), new File(thuMuc, ten).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                daThay++;
+            }
+        } catch (IOException e) {
+            phucHoiCacFile(tam, coFileCu, daThay, e);
+            throw e;
+        }
+    }
+
+    private void phucHoiCacFile(File tam, boolean[] coFileCu, int daThay, IOException loi) {
+        for (int i = 0; i < daThay; i++)
+            try {
+                File dich = new File(thuMuc, CAC_FILE[i]);
+                if (coFileCu[i])
+                    Files.copy(new File(tam, CAC_FILE[i] + ".bak").toPath(), dich.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                else
+                    Files.deleteIfExists(dich.toPath());
+            } catch (IOException e) {
+                loi.addSuppressed(e);
+            }
     }
 
     private void ghiDong(BufferedWriter out, String[] f) throws IOException {
@@ -288,13 +459,8 @@ public class LuuTruFileText {
         out.newLine();
     }
 
-    private void ghiSoLuong(BufferedWriter out, String nhan, int n) throws IOException {
-        ghiDong(out, new String[] {nhan, String.valueOf(n)});
-    }
-
     private void ghiLoaiSP(BufferedWriter out, QuanLyCuaHang q) throws IOException {
         LoaiSP[] ds = q.getDanhSachLoaiSP().getTatCa();
-        ghiSoLuong(out, "LOAI", ds.length);
         for (int i = 0; i < ds.length; i++) {
             LoaiSP x = ds[i];
             ghiDong(out, new String[] {x.getMaLoaiSP(), x.getTenLoaiSP(), x.getMoTa()});
@@ -303,7 +469,6 @@ public class LuuTruFileText {
 
     private void ghiKhachHang(BufferedWriter out, QuanLyCuaHang q) throws IOException {
         KhachHang[] ds = q.getDanhSachKhachHang().getTatCa();
-        ghiSoLuong(out, "KHACHHANG", ds.length);
         for (int i = 0; i < ds.length; i++) {
             KhachHang x = ds[i];
             ghiDong(out, new String[] {x.getMaKhachHang(), x.getHoTen(), x.getSoDienThoai(), x.getDiaChi()});
@@ -312,7 +477,6 @@ public class LuuTruFileText {
 
     private void ghiNhanVien(BufferedWriter out, QuanLyCuaHang q) throws IOException {
         NhanVien[] ds = q.getDanhSachNhanVien().getTatCa();
-        ghiSoLuong(out, "NHANVIEN", ds.length);
         for (int i = 0; i < ds.length; i++) {
             NhanVien x = ds[i];
             ghiDong(out, new String[] {x.getMaNhanVien(), x.getHoTen(), x.getSoDienThoai(), x.getCaLamViec()});
@@ -321,7 +485,6 @@ public class LuuTruFileText {
 
     private void ghiNhaCungCap(BufferedWriter out, QuanLyCuaHang q) throws IOException {
         NhaCungCap[] ds = q.getDanhSachNhaCungCap().getTatCa();
-        ghiSoLuong(out, "NHACUNGCAP", ds.length);
         for (int i = 0; i < ds.length; i++) {
             NhaCungCap x = ds[i];
             ghiDong(out, new String[] {x.getMaNhaCungCap(), x.getTenNhaCungCap(), x.getSoDienThoai(), x.getDiaChi()});
@@ -330,7 +493,6 @@ public class LuuTruFileText {
 
     private void ghiSanPham(BufferedWriter out, QuanLyCuaHang q) throws IOException {
         SanPham[] ds = q.getDanhSachSanPham().getTatCa();
-        ghiSoLuong(out, "SANPHAM", ds.length);
         for (int i = 0; i < ds.length; i++)
             ghiMotSanPham(out, ds[i]);
     }
@@ -368,7 +530,7 @@ public class LuuTruFileText {
     }
 
     private void ghiQuanAo(BufferedWriter out, QuanAoTheThao sp) throws IOException {
-        String[] f = truongChung(sp, "QUANAO", 10);
+        String[] f = truongChung(sp, "QUAN_AO", 10);
         f[7] = sp.getKichCoQuanAo();
         f[8] = sp.getMauSac();
         f[9] = sp.getChatLieu();
@@ -376,7 +538,7 @@ public class LuuTruFileText {
     }
 
     private void ghiDungCu(BufferedWriter out, DungCuTheThao sp) throws IOException {
-        String[] f = truongChung(sp, "DUNGCU", 10);
+        String[] f = truongChung(sp, "DUNG_CU", 10);
         f[7] = sp.getMonTheThao();
         f[8] = sp.getVatLieu();
         f[9] = String.valueOf(sp.getKhoiLuongKg());
@@ -385,64 +547,38 @@ public class LuuTruFileText {
 
     private void ghiHoaDon(BufferedWriter out, QuanLyCuaHang q) throws IOException {
         HoaDon[] ds = q.getDanhSachHoaDon().getTatCa();
-        ghiSoLuong(out, "HOADON", ds.length);
         for (int i = 0; i < ds.length; i++)
             ghiMotHoaDon(out, ds[i]);
     }
 
     private void ghiMotHoaDon(BufferedWriter out, HoaDon phieu) throws IOException {
         ghiDong(out, new String[] {phieu.getMaHoaDon(), phieu.getNgayLap().toString(),
-                phieu.getKhachHang().getMaKhachHang(), phieu.getNhanVien().getMaNhanVien(),
-                String.valueOf(phieu.getSoLuongChiTiet())});
-        ChiTietHoaDon[] ds = phieu.getChiTiet();
-        for (int i = 0; i < ds.length; i++)
-            ghiChiTiet(out, ds[i]);
+                phieu.getKhachHang().getMaKhachHang(), phieu.getNhanVien().getMaNhanVien()});
     }
 
-    private void ghiChiTiet(BufferedWriter out, ChiTietHoaDon ct) throws IOException {
-        ghiDong(out, new String[] {ct.getSanPham().getMaSanPham(), String.valueOf(ct.getSoLuong()),
-                ct.getDonGiaBan().toPlainString()});
+    private void ghiChiTietHoaDon(BufferedWriter out, QuanLyCuaHang q) throws IOException {
+        for (HoaDon phieu : q.getDanhSachHoaDon().getTatCa())
+            for (ChiTietHoaDon ct : phieu.getChiTiet())
+                ghiDong(out, new String[] {phieu.getMaHoaDon(), ct.getSanPham().getMaSanPham(),
+                        String.valueOf(ct.getSoLuong()), ct.getDonGiaBan().toPlainString()});
     }
 
     private void ghiPhieuNhap(BufferedWriter out, QuanLyCuaHang q) throws IOException {
         PhieuNhap[] ds = q.getDanhSachPhieuNhap().getTatCa();
-        ghiSoLuong(out, "PHIEUNHAP", ds.length);
         for (int i = 0; i < ds.length; i++)
             ghiMotPhieuNhap(out, ds[i]);
     }
 
     private void ghiMotPhieuNhap(BufferedWriter out, PhieuNhap phieu) throws IOException {
         ghiDong(out, new String[] {phieu.getMaPhieuNhap(), phieu.getNgayLap().toString(),
-                phieu.getNhaCungCap().getMaNhaCungCap(), phieu.getNhanVien().getMaNhanVien(),
-                String.valueOf(phieu.getSoLuongChiTiet())});
-        ChiTietPhieuNhap[] ds = phieu.getChiTiet();
-        for (int i = 0; i < ds.length; i++)
-            ghiChiTiet(out, ds[i]);
+                phieu.getNhaCungCap().getMaNhaCungCap(), phieu.getNhanVien().getMaNhanVien()});
     }
 
-    private void ghiChiTiet(BufferedWriter out, ChiTietPhieuNhap ct) throws IOException {
-        ghiDong(out, new String[] {ct.getSanPham().getMaSanPham(), String.valueOf(ct.getSoLuong()),
-                ct.getDonGiaNhap().toPlainString()});
-    }
-
-    private void thayFile(File tam) throws IOException {
-        File chinh = new File(thuMuc, TEN_FILE);
-        File banSao = new File(thuMuc, "cuahang.bak");
-        saoLuu(chinh, banSao);
-        if (!tam.renameTo(chinh)) {
-            if (banSao.exists() && !banSao.renameTo(chinh))
-                throw new IOException("Luu loi. Du lieu cu con trong cuahang.bak.");
-            throw new IOException("Khong thay duoc file chinh; da giu du lieu cu.");
-        }
-    }
-
-    private void saoLuu(File chinh, File banSao) throws IOException {
-        if (!chinh.exists())
-            return;
-        if (banSao.exists() && !banSao.delete())
-            throw new IOException("Khong thay duoc ban sao cu.");
-        if (!chinh.renameTo(banSao))
-            throw new IOException("Khong sao luu duoc file chinh.");
+    private void ghiChiTietPhieuNhap(BufferedWriter out, QuanLyCuaHang q) throws IOException {
+        for (PhieuNhap phieu : q.getDanhSachPhieuNhap().getTatCa())
+            for (ChiTietPhieuNhap ct : phieu.getChiTiet())
+                ghiDong(out, new String[] {phieu.getMaPhieuNhap(), ct.getSanPham().getMaSanPham(),
+                        String.valueOf(ct.getSoLuong()), ct.getDonGiaNhap().toPlainString()});
     }
 
 }

@@ -1,5 +1,10 @@
 SAN_PHAM
-GIAY|SP03|Giay chay bo|Nike|1200000.0|8|GIAY|42.0|Den||Cao su
-GIAY|SP04|Giay bong da|Adidas|950000.0|12|GIAY|41.0|Trang||Dinh cao su
+GIAY|SP03|Giay chay bo|Nike|1200000.0|8|GIAY|42.0|Den|Vai luoi|Cao su
+GIAY|SP04|Giay bong da|Adidas|950000.0|12|GIAY|41.0|Trang|Da tong hop|Dinh cao su
 DUNG_CU|SP01|Vot cau long|Yonex|350000.0|10|DC|cau long|Carbon|0.085
 DUNG_CU|SP02|Bong da|Dong Luc|250000.0|20|DC|Bong da|Da tong hop|0.45
+QUAN_AO|SP05|Ao chay bo|Nike|300000|15|QA|M|Xanh|Polyester
+QUAN_AO|SP06|Quan the thao|Adidas|250000|18|QA|L|Den|Polyester
+DUNG_CU|SP07|Vot tennis|Wilson|1500000|6|DC|Tennis|Graphite|0.30
+GIAY|SP08|Giay cau long|Yonex|850000|9|GIAY|40|Xanh|Vai luoi|Cao su
+QUAN_AO|SP09|Ao bong da|Dong Luc|200000|22|QA|XL|Do|Polyester

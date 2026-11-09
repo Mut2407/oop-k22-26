@@ -316,6 +316,8 @@ public class KiemThu {
         kiemThuGhiLoi();
         kiemThuPhucHoi();
         kiemThuFileCu();
+        kiemThuFileRieng();
+        kiemThuDuLieuMau();
     }
 
     private static void kiemThuGhiDoc() throws IOException {
@@ -359,11 +361,14 @@ public class KiemThu {
         q.themPhieuNhap(phieuNhap(q, "P1", 10, 0));
         q.themHoaDon(hoaDon(q, "H1", 2, 0));
         q.ghiDuLieu();
-        File f = new File(dir, "cuahang.txt");
+        File f = new File(dir, "chitiethoadon.txt");
         String dung = docChuoi(f);
         thuDocLoi(q, f, dung.replace("SP1|2|150", "KHONGCO|2|150"));
         thuDocLoi(q, f, dung.substring(0, dung.length() / 2));
-        thuDocLoi(q, f, dung.replace("SPORT_STORE|1", "SPORT_STORE|999"));
+        thuDocLoi(q, f, dung.replace("CHI_TIET_HOA_DON", "SAI_NHAN"));
+        thuDocLoi(q, f, dung.replace("H1|SP1", "KHONGCO|SP1"));
+        thuDocLoi(q, f, dung + "H1|SP1|1|150\n");
+        thuDocLoi(q, f, dung.replace("SP1|2|150", "SP1|abc|150"));
     }
 
     private static void thuDocLoi(QuanLyCuaHang q, File f, String noiDung) throws IOException {
@@ -382,7 +387,7 @@ public class KiemThu {
         String dir = thuMucMoi();
         QuanLyCuaHang q = taoCuaHang(dir);
         q.ghiDuLieu();
-        File f = new File(dir, "cuahang.txt");
+        File f = new File(dir, "sanpham.txt");
         String cu = docChuoi(f);
         LoaiSP loaiNgoai = new LoaiSP("NGOAI", "Ngoai", "Ngoai");
         q.getDanhSachSanPham().them(new DungCuTheThao("NGOAI", "Bong", "A", tien("1"), loaiNgoai, "Bong", "Da", 1));
@@ -400,13 +405,16 @@ public class KiemThu {
 
     private static void kiemThuPhucHoi() throws IOException {
         String dir = thuMucMoi();
-        QuanLyCuaHang q = taoCuaHang(dir);
-        q.ghiDuLieu();
-        q.themPhieuNhap(phieuNhap(q, "P1", 10, 0));
-        q.ghiDuLieu();
-        dung(new File(dir, "cuahang.txt").delete(), "Gia lap mat file chinh");
+        String cu = "SPORT_STORE|1\nLOAI|1\nL1|Thể thao|Loại mẫu\nKHACHHANG|0\nNHANVIEN|0\n"
+                + "NHACUNGCAP|0\nSANPHAM|1\nGIAY|SP1|Giày|Nike|150|8|L1|42|Đen|Vải|Cao su\n"
+                + "HOADON|0\nPHIEUNHAP|0\nKET_THUC\n";
+        ghiChuoi(new File(dir, "cuahang.bak"), cu);
+        QuanLyCuaHang q = new QuanLyCuaHang(dir);
         q.docDuLieu();
-        dung(ton(q, "SP1") == 0 && new File(dir, "cuahang.txt").exists(), "Phuc hoi ban sao lan luu truoc");
+        dung(ton(q, "SP1") == 8 && new File(dir, "cuahang.txt").exists(), "Doc va phuc hoi dinh dang cu");
+        q.ghiDuLieu();
+        q.docDuLieu();
+        dung(ton(q, "SP1") == 8 && new File(dir, "sanpham.txt").exists(), "Luu dinh dang cu thanh cac file rieng");
     }
 
     private static void kiemThuFileCu() throws IOException {
@@ -419,6 +427,86 @@ public class KiemThu {
         q.ghiDuLieu();
         q.docDuLieu();
         dung(q.getDanhSachKhachHang().getSoLuong() == 1 && cu.exists(), "Chuyen dinh dang giu file goc");
+    }
+
+    private static void kiemThuFileRieng() throws IOException {
+        String dir = thuMucMoi();
+        QuanLyCuaHang q = taoCuaHang(dir);
+        q.themPhieuNhap(phieuNhap(q, "P1", 10, 10));
+        q.themHoaDon(hoaDon(q, "H1", 2, 1));
+        q.ghiDuLieu();
+        File f = new File(dir, "nhanvien.txt");
+        ghiChuoi(f, "\uFEFF" + docChuoi(f).replace("Nhân viên Bình", "Nhân viên mới") + "\n");
+        ghiChuoi(new File(dir, "cuahang.txt"), "File cu khong duoc uu tien\n");
+        q.docDuLieu();
+        dung(q.getDanhSachNhanVien().timTheoMa("NV1").getHoTen().equals("Nhân viên mới"), "Doc sua truc tiep file rieng, BOM va dong trong");
+        kiemTraSauDoc(q);
+        kiemThuLuuLaiFileRieng(q, dir);
+    }
+
+    private static void kiemThuLuuLaiFileRieng(QuanLyCuaHang q, String dir) throws IOException {
+        q.getDanhSachKhachHang().timTheoMa("KH1").setHoTen("Khách đã sửa");
+        q.ghiDuLieu();
+        dung(docChuoi(new File(dir, "khachhang.txt")).contains("Khách đã sửa"), "Luu vao dung file khachhang");
+        dung(docChuoi(new File(dir, "chitiethoadon.txt")).contains("H1|SP1|2|150"), "Ghi chi tiet kem ma chung tu");
+        dung(docChuoi(new File(dir, "sanpham.txt")).contains("QUAN_AO|SP2"), "Ghi nhan san pham thong nhat");
+        dung(new File(dir, ".luu-tam/sanpham.txt.bak").isFile(), "Co ban sao truoc khi thay file");
+        q.docDuLieu();
+        dung(q.getDanhSachKhachHang().timTheoMa("KH1").getHoTen().equals("Khách đã sửa"), "Doc lai noi dung vua luu");
+        kiemTraSauDoc(q);
+        kiemThuFileDichLoi(q, dir);
+    }
+
+    private static void kiemThuFileDichLoi(QuanLyCuaHang q, String dir) throws IOException {
+        File sp = new File(dir, "sanpham.txt");
+        String cu = docChuoi(sp);
+        File loi = new File(dir, "chitietphieunhap.txt");
+        dung(loi.delete() && loi.mkdir(), "Tao thu muc trung ten file dich");
+        q.getDanhSachSanPham().timTheoMa("SP1").setGiaBan(tien("999"));
+        try {
+            q.ghiDuLieu();
+            dung(false, "Phai bao khong ghi duoc file dich");
+        } catch (IOException e) {
+            dung(docChuoi(sp).equals(cu), "Kiem tra du file dich truoc khi thay file cu");
+        }
+    }
+
+    private static void kiemThuDuLieuMau() throws IOException {
+        QuanLyCuaHang q = new QuanLyCuaHang("data");
+        q.docDuLieu();
+        dung(q.getDanhSachLoaiSP().getSoLuong() == 3, "Mau co 3 loai");
+        dung(q.getDanhSachKhachHang().getSoLuong() == 10, "Giu 10 khach hang da nhap");
+        dung(q.getDanhSachNhanVien().getSoLuong() == 5, "Doc 5 nhan vien");
+        dung(q.getDanhSachNhaCungCap().getSoLuong() == 5, "Doc 5 nha cung cap");
+        dung(q.getDanhSachSanPham().getSoLuong() == 9, "Mau co 9 san pham");
+        dung(q.getDanhSachHoaDon().getSoLuong() == 5, "Mau co 5 hoa don");
+        dung(q.getDanhSachPhieuNhap().getSoLuong() == 5, "Mau co 5 phieu nhap");
+        kiemTraThongKeMau(q);
+        kiemTraTonMau(q);
+    }
+
+    private static void kiemTraThongKeMau(QuanLyCuaHang q) {
+        dung(q.getDanhSachHoaDon().thongKeTongTien().compareTo(tien("8950000")) == 0, "Tong ban mau");
+        dung(q.getDanhSachPhieuNhap().thongKeTongTien().compareTo(tien("44400000")) == 0, "Tong nhap mau");
+        LocalDate ngay = LocalDate.of(2026, 11, 9);
+        dung(q.getDanhSachHoaDon().thongKeTongTien(ngay, ngay).compareTo(tien("3300000")) == 0, "Thong ke mau theo ngay");
+        dung(q.getDanhSachHoaDon().timTheoMa("HD000001").getSoLuongChiTiet() == 2, "HD mau co chi tiet");
+        dung(q.getDanhSachPhieuNhap().timTheoMa("PN000003").getSoLuongChiTiet() == 3, "PN mau co chi tiet");
+    }
+
+    private static void kiemTraTonMau(QuanLyCuaHang q) throws IOException {
+        for (SanPham sp : q.getDanhSachSanPham().getTatCa()) {
+            int tonDuKien = 0;
+            for (PhieuNhap pn : q.getDanhSachPhieuNhap().getTatCa())
+                if (pn.timChiTiet(sp.getMaSanPham()) != null)
+                    tonDuKien += pn.timChiTiet(sp.getMaSanPham()).getSoLuong();
+            for (HoaDon hd : q.getDanhSachHoaDon().getTatCa())
+                if (hd.timChiTiet(sp.getMaSanPham()) != null)
+                    tonDuKien -= hd.timChiTiet(sp.getMaSanPham()).getSoLuong();
+            dung(sp.getSoLuongTon() == tonDuKien, "Ton mau khop nhap tru ban: " + sp.getMaSanPham());
+        }
+        q.docDuLieu();
+        dung(ton(q, "SP01") == 10 && ton(q, "SP03") == 8, "Doc mau nhieu lan khong doi ton");
     }
 
     private static void kiemThuDuLieuSai() {

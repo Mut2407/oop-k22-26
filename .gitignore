@@ -4,6 +4,7 @@ out/
 data/cuahang.txt
 **/cuahang.tmp
 **/cuahang.bak
+**/.luu-tam/
 
 # IDE
 .idea/
@@ -15,4 +16,3 @@ data/cuahang.txt
 # OS
 Thumbs.db
 ~$*
-

@@ -19,13 +19,11 @@ java -Dfile.encoding=UTF-8 -cp out Main
 
 Trên Linux/macOS: `sh run.sh`. Chương trình không cần thư viện bên ngoài.
 
-Để thử bộ dữ liệu mẫu có sẵn ba loại sản phẩm, một phiếu nhập và một hóa đơn:
+Chạy bình thường sẽ đọc ngay dữ liệu mẫu trong `data/`: **3 loại, 9 sản phẩm thuộc ba lớp con, 10 khách hàng, 5 nhân viên, 5 nhà cung cấp, 5 hóa đơn và 5 phiếu nhập**. Các hóa đơn có 10 dòng chi tiết; các phiếu nhập có 11 dòng chi tiết.
 
-```powershell
-.\run.bat data-mau
-```
+Tổng tiền bán mẫu là **8.950.000 đồng**, tổng tiền nhập là **44.400.000 đồng**. Tồn hiện tại của từng sản phẩm khớp tổng nhập trừ tổng bán; ví dụ `SP01 = 10`, `SP03 = 8`. Có thể vào từng menu và chọn `1. Xem danh sách`, hoặc chọn `9. Thong ke tong tien` ở menu chính.
 
-Bộ mẫu có tồn `SP01 = 8`, `SP02 = 5`, `SP03 = 10`; tổng tiền bán `1400000`, tổng tiền nhập `12000000`. Khi chạy với `data-mau`, thao tác lưu sẽ cập nhật bộ mẫu đó. Muốn khôi phục mẫu ban đầu, dùng lại file mẫu từ Git.
+Muốn dùng thư mục dữ liệu khác: `.\run.bat ten-thu-muc`. Thao tác lưu và thoát sẽ cập nhật các file trong thư mục đã chọn. Có thể sửa file bằng trình soạn thảo khi chương trình đã đóng, rồi chạy lại để nạp thay đổi.
 
 ## Các chức năng
 
@@ -51,8 +49,7 @@ Trong màn hình soạn chứng từ, `0` lưu bản soạn; chứng từ phải
 | `src/services` | 7 danh sách, `QuanLyCuaHang`, `LuuTruFileText` và interface `IQuanLyDanhSach<T>` |
 | `src/Main.java` | Tạo lớp quản lý và gọi `chay()`; `main` có 3 dòng lệnh |
 | `artifacts/Sport_Store.drawio.xml` | Sơ đồ được đồng bộ với 23 class thực tế |
-| `data/khachhang.txt` | Dữ liệu khách hàng ban đầu của repo, giữ nguyên |
-| `data-mau/cuahang.txt` | Bộ dữ liệu mẫu để thực hành |
+| `data/*.txt` | Chín file dữ liệu đang dùng; giữ dữ liệu khách hàng, nhân viên và nhà cung cấp đã nhập |
 | `tests/KiemThu.java` | Chương trình kiểm thử riêng, không thuộc 23 class ứng dụng |
 
 - Các danh sách dùng `T[]` cụ thể và `soLuong`; mở rộng bằng `Arrays.copyOf`, xóa bằng vòng lặp dồn mảng. Một `SanPham[]` chứa cả ba lớp con và gọi `hienThiThongTin()` bằng đa hình.
@@ -67,15 +64,50 @@ Khung `DanhSachKho` rỗng được bỏ vì không có thực thể kho cần q
 
 ## Lưu và đọc file text
 
-Toàn bộ dữ liệu dùng **một file `cuahang.txt`** trong thư mục được chọn. Tài liệu gợi ý chín file; ở đây các mục và dòng chi tiết được đặt trong cùng một file để việc đọc/ghi đơn giản và tránh lệch chứng từ với tồn kho khi lưu. File mẫu thể hiện đầy đủ định dạng.
+Chương trình đọc và ghi **chín file riêng** trong `data/`. Mỗi file bắt đầu bằng nhãn ở dòng đầu; các dòng sau là bản ghi phân cách bằng `|`. Dùng UTF-8, ngày `yyyy-MM-dd`, số tiền không có dấu phân cách hàng nghìn; không nhập dấu `|` hay xuống dòng trong một trường. Chấp nhận dòng trống và dấu BOM UTF-8 ở đầu file.
 
-File mã hóa UTF-8, phân cách bằng `|`, ngày `yyyy-MM-dd`, tiền không có dấu phân cách hàng nghìn. Chương trình chặn dấu `|` và xuống dòng trong trường dữ liệu. Mỗi mục có nhãn và số lượng; sản phẩm có nhãn `GIAY`, `QUANAO` hoặc `DUNGCU` để đọc đúng lớp con.
+| File | Nhãn dòng đầu | Các trường trên một dòng dữ liệu |
+|---|---|---|
+| `loaisp.txt` | `LOAI_SP` | Mã loại, tên loại, mô tả |
+| `khachhang.txt` | `KHACH_HANG` | Mã khách, họ tên, số điện thoại, địa chỉ |
+| `nhanvien.txt` | `NHAN_VIEN` | Mã nhân viên, họ tên, số điện thoại, ca làm |
+| `nhacungcap.txt` | `NHA_CUNG_CAP` | Mã nhà cung cấp, tên, số điện thoại, địa chỉ |
+| `sanpham.txt` | `SAN_PHAM` | Nhãn lớp, mã, tên, thương hiệu, giá bán, tồn hiện tại, mã loại, thuộc tính riêng |
+| `hoadon.txt` | `HOA_DON` | Mã hóa đơn, ngày lập, mã khách, mã nhân viên |
+| `chitiethoadon.txt` | `CHI_TIET_HOA_DON` | Mã hóa đơn, mã sản phẩm, số lượng, đơn giá bán |
+| `phieunhap.txt` | `PHIEU_NHAP` | Mã phiếu nhập, ngày lập, mã nhà cung cấp, mã nhân viên |
+| `chitietphieunhap.txt` | `CHI_TIET_PHIEU_NHAP` | Mã phiếu nhập, mã sản phẩm, số lượng, đơn giá nhập |
 
-Đọc loại/người trước, rồi sản phẩm, chứng từ và từng dòng chi tiết. Tồn hiện tại đã nằm trong dòng sản phẩm nên **đọc file không nhập/bán lại hàng**. Đọc vào bộ danh sách tạm; chỉ thay bộ đang dùng khi toàn bộ file hợp lệ. File lỗi được báo kèm dòng; nếu lỗi lúc khởi động, chương trình dừng và không ghi đè file.
+Trong `sanpham.txt`, phần thuộc tính riêng phụ thuộc nhãn lớp:
 
-Khi lưu, chương trình ghi `cuahang.tmp`, đóng file, đọc thử lại, đổi file cũ thành `cuahang.bak`, rồi thay file chính. Nếu thay thất bại thì phục hồi bản cũ. Nếu lần sau thiếu file chính nhưng còn `.bak`, chương trình phục hồi bản sao. Đây là cách xử lý file thông thường cho ứng dụng console một tiến trình.
+- `GIAY`: cỡ giày, màu sắc, chất liệu, loại đế giày.
+- `QUAN_AO`: cỡ quần áo, màu sắc, chất liệu.
+- `DUNG_CU`: môn thể thao, vật liệu, khối lượng kg.
 
-Lần chạy đầu chưa có `cuahang.txt`, chương trình đọc `data/khachhang.txt` của repo. File gốc có bốn trường; trường thứ tư được giữ nguyên trong `diaChi` theo mô hình đã chọn, kể cả các giá trị hiện là địa chỉ email. Có thể sửa lại địa chỉ qua menu. File gốc không bị sửa/xóa. Các lần sau đọc bộ dữ liệu đã lưu trong `cuahang.txt`.
+Ví dụ một hóa đơn nằm trong hai file:
+
+```text
+# hoadon.txt
+HOA_DON
+HD000001|2026-11-07|KH01|NV01
+
+# chitiethoadon.txt
+CHI_TIET_HOA_DON
+HD000001|SP01|2|350000
+HD000001|SP03|1|1200000
+```
+
+Các dòng bắt đầu bằng `#` ở ví dụ chỉ chú thích tên file; không ghi chúng vào dữ liệu thật. Tổng hóa đơn trên là 1.900.000 đồng, được tính từ các dòng chi tiết.
+
+Đọc loại và người trước, rồi sản phẩm, chứng từ và chi tiết. Mã tham chiếu phải tồn tại, mỗi chứng từ có ít nhất một dòng chi tiết và không lặp mã sản phẩm trong cùng chứng từ. Mô tả loại và chất liệu giày không được để trống. Tồn hiện tại đã nằm trong dòng sản phẩm nên **đọc file không nhập/bán lại hàng**.
+
+Đọc vào bộ danh sách tạm; chỉ thay bộ đang dùng khi toàn bộ dữ liệu hợp lệ. Khi có lỗi, chương trình báo tên file và dòng tương ứng. Lỗi lúc khởi động sẽ dừng chương trình, không ghi đè dữ liệu.
+
+Khi lưu, chương trình ghi đủ chín file vào thư mục tạm `.luu-tam/`, đóng và đọc kiểm tra lại, rồi sao lưu các file cũ trước khi thay. Nếu có lỗi khi thay file, chương trình cố phục hồi các file đã thay từ bản sao. Các bản sao nằm trong `.luu-tam/*.txt.bak`; chúng thuộc lần lưu trước và không tự được nạp. Đây là cách lưu cho ứng dụng console một tiến trình; không bảo đảm thay cả chín file cùng lúc khi mất điện hoặc tiến trình bị buộc dừng.
+
+Các file riêng được ưu tiên kể cả khi còn `cuahang.txt` của phiên bản cũ. Nếu chưa có file riêng nào, chương trình vẫn đọc định dạng `cuahang.txt` cũ (hoặc phục hồi `cuahang.bak` khi thiếu file chính); lần lưu sau sẽ tạo chín file riêng. Thư mục mới chưa có file được hiểu là bộ dữ liệu rỗng.
+
+Trường thứ tư trong `khachhang.txt` hiện có địa chỉ email do dữ liệu đã nhập; chương trình giữ nguyên trong thuộc tính `diaChi`. File `khachhang copy.txt` là bản sao của người dùng, không được nạp thêm.
 
 ## Kiểm thử
 
@@ -90,4 +122,4 @@ javac -encoding UTF-8 -Xlint:all -d out -sourcepath src src/Main.java tests/Kiem
 java -cp out KiemThu
 ```
 
-Kiểm thử dùng Java thuần, tự báo lỗi bằng `AssertionError`; không cần JUnit. Bao gồm mở rộng/dồn mảng, CRUD của bảy danh sách, chi tiết và sao chép, đơn giá lịch sử, thống kê theo ngày, thêm/sửa/xóa chứng từ, thiếu tồn ở dòng sau, tham chiếu trước khi xóa, ghi/đọc UTF-8, đọc lại không đổi tồn, file sai/truncated, phục hồi bản sao và nhập dữ liệu khách hàng cũ. Dữ liệu kiểm thử tạo trong `out/`, không sửa `data/`.
+Kiểm thử dùng Java thuần, tự báo lỗi bằng `AssertionError`; không cần JUnit. Bao gồm mở rộng/dồn mảng, CRUD của bảy danh sách, chi tiết và sao chép, đơn giá lịch sử, thống kê theo ngày, thêm/sửa/xóa chứng từ, thiếu tồn ở dòng sau, tham chiếu trước khi xóa, ghi/đọc UTF-8, đọc lại không đổi tồn, file sai/truncated, đọc định dạng cũ, ưu tiên file riêng khi sửa bằng trình soạn thảo, kiểm tra liên kết chi tiết, dữ liệu mẫu và tồn kho khớp nhập trừ bán. Dữ liệu kiểm thử tạo trong `out/`, không sửa `data/`.
