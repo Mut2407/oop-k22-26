@@ -1,0 +1,14 @@
+# Compiled class files
+*.class
+out/
+
+# IDE
+.idea/
+*.iml
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# OS
+Thumbs.db
+~$*
