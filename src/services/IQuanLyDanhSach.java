@@ -1,8 +1,8 @@
 package services;
 
 public interface IQuanLyDanhSach<T> {
-    void Them();
-    void Xoa();
-    void Sua();
-    void timKiem();
+    boolean them(T doiTuong);
+    boolean sua(String ma, T moi);
+    boolean xoa(String ma);
+    T[] timKiem(String tuKhoa);
 }
