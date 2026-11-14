@@ -6,6 +6,8 @@ public class NhanVien {
     private String soDienThoai;
     private String caLamViec;
 
+
+    //không tham số
     public NhanVien() {
         maNhanVien = "";
         hoTen = "";
@@ -13,6 +15,7 @@ public class NhanVien {
         caLamViec = "";
     }
 
+    //có tham số
     public NhanVien(String maNhanVien, String hoTen, String soDienThoai, String caLamViec) {
         kiemTraChuoi(maNhanVien);
         this.maNhanVien = maNhanVien.trim();
@@ -40,8 +43,6 @@ public class NhanVien {
 
     public void setSoDienThoai(String soDienThoai) {
         kiemTraChuoi(soDienThoai);
-        if (!soDienThoai.matches("[0-9]{9,11}"))
-            throw new IllegalArgumentException("SDT can 9 den 11 chu so.");
         this.soDienThoai = soDienThoai;
     }
 

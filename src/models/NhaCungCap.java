@@ -6,6 +6,7 @@ public class NhaCungCap {
     private String soDienThoai;
     private String diaChi;
 
+    //không tham số
     public NhaCungCap() {
         maNhaCungCap = "";
         tenNhaCungCap = "";
@@ -13,6 +14,7 @@ public class NhaCungCap {
         diaChi = "";
     }
 
+    //có tham số
     public NhaCungCap(String maNhaCungCap, String tenNhaCungCap, String soDienThoai, String diaChi) {
         kiemTraChuoi(maNhaCungCap);
         this.maNhaCungCap = maNhaCungCap.trim();
@@ -40,8 +42,6 @@ public class NhaCungCap {
 
     public void setSoDienThoai(String soDienThoai) {
         kiemTraChuoi(soDienThoai);
-        if (!soDienThoai.matches("[0-9]{9,11}"))
-            throw new IllegalArgumentException("SDT can 9 den 11 chu so.");
         this.soDienThoai = soDienThoai;
     }
 

@@ -6,13 +6,16 @@ public class KhachHang {
     private String soDienThoai;
     private String diaChi;
 
+
+    //không tham số
     public KhachHang() {
         maKhachHang = "";
         hoTen = "";
         soDienThoai = "";
         diaChi = "";
-    }
+        }
 
+    //có tham số
     public KhachHang(String maKhachHang, String hoTen, String soDienThoai, String diaChi) {
         kiemTraChuoi(maKhachHang);
         this.maKhachHang = maKhachHang.trim();
@@ -40,8 +43,6 @@ public class KhachHang {
 
     public void setSoDienThoai(String soDienThoai) {
         kiemTraChuoi(soDienThoai);
-        if (!soDienThoai.matches("[0-9]{9,11}"))
-            throw new IllegalArgumentException("SDT can 9 den 11 chu so.");
         this.soDienThoai = soDienThoai;
     }
 
